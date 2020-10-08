@@ -7,7 +7,7 @@ class ShroomLocation {
   double lat;
   double long;
   int pickCount;
-  int remindDays;
+  String remindDays;
   String photo;
 
   Map<String, dynamic> toMap() {
