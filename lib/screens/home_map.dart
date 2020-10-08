@@ -8,11 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image/image.dart';
 import 'package:location/location.dart';
+import 'package:my_shrooms/custom_widget/maps_marker.dart';
 import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
 import 'package:my_shrooms/models/shroom_location.dart';
 import 'package:my_shrooms/screens/add_shrooms.dart';
 import 'package:my_shrooms/services/db_helper.dart';
 import 'package:my_shrooms/util/stringhelper.dart';
+import 'package:ndialog/ndialog.dart';
 import 'package:provider/provider.dart';
 
 class HomeMap extends StatefulWidget {
@@ -23,7 +25,7 @@ class HomeMap extends StatefulWidget {
 class _HomeMapState extends State<HomeMap> {
 
   Completer<GoogleMapController> _controller = Completer();
-  Set<Marker> _markers = Set<Marker>();
+  List<MyMarker> _markers = [];
   LocationData currentLocation;
   Location location = Location();
 
@@ -83,7 +85,7 @@ class _HomeMapState extends State<HomeMap> {
     return currentLocation == null ? Container() : GoogleMap(
       tiltGesturesEnabled: false,
       mapType: MapType.hybrid,
-      markers: _markers,
+      markers: Set<MyMarker>.from(_markers),
       myLocationEnabled: true,
       myLocationButtonEnabled: true,
       compassEnabled: false,
@@ -106,18 +108,11 @@ class _HomeMapState extends State<HomeMap> {
     return CameraPosition(zoom: 14.4746, target: LatLng(currentLocation.latitude, currentLocation.longitude));
   }
 
-  void addShroomPins(List<ShroomLocation> shrooms) {
+  void addShroomPins(List<ShroomLocation> shrooms) async {
     for (ShroomLocation shroom in shrooms) {
 
       drawShroomPin(shroom, 150).then((bytes) {
-        setState(() {
-          _markers.add(
-              Marker(
-                  onTap: () => print("test"),
-                  markerId: MarkerId(shroom.id.toString()),
-                  position: LatLng(shroom.lat, shroom.long),
-                  icon: BitmapDescriptor.fromBytes(bytes)));
-        });
+        addMarker(shroom, BitmapDescriptor.fromBytes(bytes));
       });
 
     }
@@ -169,56 +164,60 @@ class _HomeMapState extends State<HomeMap> {
     return data.buffer.asUint8List();
   }
 
-
-  /*
-  Future<Uint8List> getImageFromBytesSize(Uint8List bytes, int height) async {
-    var image = decodeImage(bytes);
-    var originalH = image.height;
-    var originalW = image.width;
-    image = copyResizeCropSquare(image, height);
-
-
-    if (originalH < originalW) image = copyRotate(image, 90); //TODO TEMP BUG?
-
-
-    Uint8List imageBytesResized = Uint8List.fromList(encodePng(image));
-
-    //bytes to ui.Image
-    Completer<ui.Image> completer = new Completer();
-    ui.decodeImageFromList(imageBytesResized, (result) {
-      completer.complete(result);
-    });
-
-    ui.Image imageDone = await completer.future;
-    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
-    final Canvas canvas = Canvas(pictureRecorder);
-
-
-    final radius = 10.0; //20 diameter
-    final circleImageMargin = 30;
-    final center = Offset(imageDone.width / 2, (imageDone.height + circleImageMargin).toDouble());
-
-    // The circle should be paint before or it will be hidden by the path
-    Paint paintCircle = Paint()..color = Colors.black;
-    Paint paintBorder = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 5
-      ..style = PaintingStyle.stroke;
-    canvas.drawCircle(center, radius, paintCircle);
-    canvas.drawCircle(center, radius, paintBorder);
-
-    var drawImageWidth = 0.0;
-    var drawImageHeight =  0.0;
-    Path path = Path()..addOval(Rect.fromLTWH(drawImageWidth, drawImageHeight, imageDone.width.toDouble(), imageDone.height.toDouble()));
-    canvas.clipPath(path);
-
-    canvas.drawImage(imageDone, Offset(drawImageWidth, drawImageHeight), Paint());
-
-    final img = await pictureRecorder.endRecording().toImage(imageDone.width, (imageDone.height + (radius * 2) + circleImageMargin).ceil());
-    final data = await img.toByteData(format: ui.ImageByteFormat.png);
-    return data.buffer.asUint8List();
+  Future<void> dragPinEnd(int shroomId, LatLng value, BuildContext context) async {
+    await NAlertDialog(
+        onDismiss: () {
+          dragRestoreOldLoc(shroomId, context);
+        },
+        dialogStyle: DialogStyle(titleDivider: false),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 12.0),
+          child: Text("Would you like to save this position?"),
+        ),
+        actions: <Widget>[
+          FlatButton(child: Text("Cancel"), onPressed: () => dragRestoreOldLoc(shroomId, context)),
+          FlatButton(child: Text("Save"), onPressed: () => saveNewDragLoc(shroomId, value, context)),
+        ],
+     ).show(context);
   }
 
-   */
+  void saveNewDragLoc(int shroomId, LatLng value, BuildContext context) {
+    ShroomLocation shroom = shroomLocData.changeCoords(shroomId, value);
+    db.updateShroomLocation(shroom);
 
+    Navigator.pop(context);
+  }
+
+  void dragRestoreOldLoc(int shroomId, BuildContext context) async{
+    // get old marker for the marker icon (dont have to redraw)
+    var oldMarker = _markers.firstWhere((element) => shroomId.toString() == element?.markerId.value);
+    var icon = oldMarker.icon;
+
+    // remove old marker and add new(cant change position)
+    _markers.removeWhere((element) => shroomId.toString() == element?.markerId.value);
+
+    //get shroom with old location
+    var shroom = shroomLocData.shroomsLoc.firstWhere((element) => shroomId == element.id);
+
+    //ugly solution to mark the object for rebuilding, otherwise it wont be rebuilt
+    shroom.long += 0.0000000000001;
+    addMarker(shroom, icon);
+
+    Navigator.pop(context);
+  }
+
+  void addMarker(ShroomLocation shroom, BitmapDescriptor bitmap) {
+    setState(() {
+     _markers.add(
+          MyMarker(
+              infoWindow: InfoWindow(title: shroom.name),
+              draggable: true,
+              onDragEnd: (value) => dragPinEnd(shroom.id, value, context),
+              onTap: () => print("test"),
+              markerId: MarkerId(shroom.id.toString()),
+              position: LatLng(shroom.lat, shroom.long),
+              icon: bitmap));
+
+    });
+  }
 }

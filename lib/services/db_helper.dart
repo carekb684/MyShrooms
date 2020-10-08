@@ -28,7 +28,7 @@ class DBHelper {
       },
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 13,
+      version: 16,
     );
   }
 
@@ -43,6 +43,10 @@ class DBHelper {
   Future<int> insertShroomLocation(ShroomLocation shroom) async {
     var future = await db.insert(LOCATIONS_TABLE, shroom.toMap(), conflictAlgorithm: ConflictAlgorithm.fail);
     return future;
+  }
+
+  void updateShroomLocation(ShroomLocation shroom) {
+    db.update(LOCATIONS_TABLE, shroom.toMap(), where: "id = ?", whereArgs: [shroom.id]);
   }
 
 
