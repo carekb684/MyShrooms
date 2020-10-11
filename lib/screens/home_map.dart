@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
@@ -12,10 +11,12 @@ import 'package:my_shrooms/custom_widget/maps_marker.dart';
 import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
 import 'package:my_shrooms/models/shroom_location.dart';
 import 'package:my_shrooms/screens/add_shrooms.dart';
+import 'package:my_shrooms/screens/view_image.dart';
 import 'package:my_shrooms/services/db_helper.dart';
 import 'package:my_shrooms/util/stringhelper.dart';
 import 'package:ndialog/ndialog.dart';
 import 'package:provider/provider.dart';
+import 'package:thumbnailer/thumbnailer.dart';
 
 class HomeMap extends StatefulWidget {
   @override
@@ -31,6 +32,8 @@ class _HomeMapState extends State<HomeMap> {
 
   DBHelper db;
   ShroomLocationsData shroomLocData;
+
+  Offset movePinPos;
 
   //Future<List<ShroomLocation>> fShrooms;
 
@@ -48,6 +51,9 @@ class _HomeMapState extends State<HomeMap> {
     shroomLocData = Provider.of<ShroomLocationsData>(context);
     addShroomPins(shroomLocData.shroomsLoc);
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -213,11 +219,84 @@ class _HomeMapState extends State<HomeMap> {
               infoWindow: InfoWindow(title: shroom.name),
               draggable: true,
               onDragEnd: (value) => dragPinEnd(shroom.id, value, context),
-              onTap: () => print("test"),
+              onTap: () => onTapMarker(shroom),
               markerId: MarkerId(shroom.id.toString()),
               position: LatLng(shroom.lat, shroom.long),
               icon: bitmap));
 
     });
+  }
+
+  void onTapMarker(ShroomLocation shroom) {
+
+    showModalBottomSheet<dynamic>(
+        isScrollControlled: true,
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (BuildContext context) {
+          return Wrap(
+            children: [
+              ClipRRect(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16.0),
+                topRight: Radius.circular(16.0),
+              ),
+              child: Container(
+                  width: double.infinity,
+                  color: Theme.of(context).colorScheme.primary,
+                  //height: (56 * 6).toDouble(),
+                  child: Container(
+                    margin: EdgeInsets.symmetric(horizontal: 15),
+                    child: Column(children: [
+                      SizedBox(height:20),
+                      Text(shroom.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),),
+                      getLastPickDateText(shroom.remindDays),
+                      Text("Picked ${shroom.pickCount} time" + (shroom.pickCount != 1 ? "s" : ""), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white54)),
+                      SizedBox(height: 20,),
+                      Container(
+                          height: 200,
+                          child: getImageThumb(shroom),
+                      ),
+                      SizedBox(height: 40),
+
+                    ],),
+                  )
+              ),
+            ),
+          ]
+          );
+        }
+    );
+  }
+
+  Widget getImageThumb(ShroomLocation shroom) {
+    File image;
+
+    return InkWell(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => ViewImageFullScreen(image: image))),
+      child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+        child: Thumbnail(
+        dataResolver: () async {
+          image = File(StringHelper.getPhotoPath(shroom.photo, shroom.id));
+          return image.readAsBytes();
+        },
+        mimeType: "image/" + shroom.photo.split(".").last,
+        widgetSize: double.infinity,
+        ),
+      ),
+    );
+
+  }
+
+  Widget getLastPickDateText(String remindDays) {
+    DateTime remindDate = DateTime.parse(remindDays);
+    DateTime now = DateTime.now();
+    now = DateTime(now.year, now.month, now.day, 0, 0, 0, 0, 0);
+    
+    int days = now.difference(remindDate).inDays;
+    String daysText = days >= 0 ? "now" : days == -1 ? "in ${days.abs()} day" : "in ${days.abs()} days";
+
+    return Text("Can be repicked $daysText" + " ($remindDays)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white54));
   }
 }
