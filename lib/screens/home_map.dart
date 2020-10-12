@@ -53,11 +53,8 @@ class _HomeMapState extends State<HomeMap> {
   }
 
 
-
-
   @override
   Widget build(BuildContext context) {
-
 
 
     return Scaffold(
@@ -79,14 +76,7 @@ class _HomeMapState extends State<HomeMap> {
                     child: IconButton(
                       icon: Icon(Icons.add, color: Colors.white),
                       iconSize: 25,
-                      onPressed: () => Navigator.push(context,
-                          SlideInRightTransition(
-                            duration: Duration(milliseconds: 1500),
-                            pageBuilder: (context, animation, secondaryAnimation){
-                              return AddShrooms(transitionAnimation: animation);
-                              },
-                          ),
-                      ),
+                      onPressed: onAddShroomsPressed,
                     )
                 ),
               ),
@@ -117,7 +107,6 @@ class _HomeMapState extends State<HomeMap> {
     setState(() {
       currentLocation = locationData;
     });
-
   }
 
   getInitLocation() {
@@ -126,7 +115,7 @@ class _HomeMapState extends State<HomeMap> {
 
   void addShroomPins(List<ShroomLocation> shrooms) async {
     for (ShroomLocation shroom in shrooms) {
-      if(alreadyDrawn(shroom)) {
+      if(!alreadyDrawn(shroom)) {
         var bytes = await drawShroomPin(shroom, 150);
         addMarker(shroom, BitmapDescriptor.fromBytes(bytes));
       }
@@ -234,7 +223,7 @@ class _HomeMapState extends State<HomeMap> {
               infoWindow: InfoWindow(title: shroom.name),
               draggable: true,
               onDragEnd: (value) => dragPinEnd(shroom.id, value, context),
-              onTap: () => onTapMarker(shroom),
+              onTap: () => showShroomDetails(shroom),
               markerId: MarkerId(shroom.id.toString()),
               position: LatLng(shroom.lat, shroom.long),
               icon: bitmap));
@@ -242,7 +231,7 @@ class _HomeMapState extends State<HomeMap> {
     });
   }
 
-  void onTapMarker(ShroomLocation shroom) {
+  void showShroomDetails(ShroomLocation shroom) {
 
     showModalBottomSheet<dynamic>(
         isScrollControlled: true,
@@ -325,9 +314,27 @@ class _HomeMapState extends State<HomeMap> {
   bool alreadyDrawn(ShroomLocation shroom) {
     for (MyMarker marker in _markers) {
       if (shroom.id.toString() == marker.markerId.value) {
-        return false;
+        return true;
       }
     }
-    return true;
+    return false;
+  }
+
+  void onAddShroomsPressed() async {
+    var result = await Navigator.push(context, SlideInRightTransition(
+        duration: Duration(milliseconds: 1500),
+        pageBuilder: (context, animation, secondaryAnimation){
+          return AddShrooms(transitionAnimation: animation);
+        },
+      ),
+    );
+
+    if (result != null) {
+      ShroomLocation shroom = result as ShroomLocation;
+      var googleMapController = await _controller.future;
+      googleMapController.moveCamera(CameraUpdate.newLatLngZoom(LatLng(shroom.lat, shroom.long), 18));
+      showShroomDetails(shroom);
+    }
+
   }
 }

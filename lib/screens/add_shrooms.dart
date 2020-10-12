@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
 import 'package:my_shrooms/animations/add_shroom_slide_animation.dart';
@@ -149,6 +150,7 @@ class _AddShroomsState extends State<AddShrooms> {
                                 child: Container(
                                   padding: EdgeInsets.only(top: 6, bottom: 6, right: 6, left: 12),
                                   child: TextFormField(
+                                    textCapitalization: TextCapitalization.sentences,
                                     validator: (value) => value.isEmpty ? "Please enter a name" : null,
                                     onSaved: (newValue) => shroomName = newValue,
                                     decoration: InputDecoration(
@@ -296,7 +298,7 @@ class _AddShroomsState extends State<AddShrooms> {
 
       shroom.id = id;
       shroomLocData.add(shroom);
-      Navigator.pop(context);
+      Navigator.pop(context, shroom);
     });
 
 
