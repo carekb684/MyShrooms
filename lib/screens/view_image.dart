@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:photo_view/photo_view.dart';
 
 class ViewImageFullScreen extends StatelessWidget {
   ViewImageFullScreen({this.image});
@@ -16,7 +17,10 @@ class ViewImageFullScreen extends StatelessWidget {
             fit: StackFit.expand,
             children: [
 
-              Image.file(image, fit:BoxFit.fitWidth,),
+              PhotoView.customChild(
+                minScale: 1.0,
+                child: Image.file(image, fit:BoxFit.fitWidth,),
+              ),
 
               Positioned(
                 left: 5, top:5,

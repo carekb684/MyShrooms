@@ -37,6 +37,7 @@ dependencies:
   image: ^2.1.18
   path_provider: ^1.6.18
   ndialog: ^3.1.0
+  photo_view: ^0.10.2
 
   cupertino_icons: ^1.0.0
 

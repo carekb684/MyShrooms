@@ -34,6 +34,8 @@ class _HomeMapState extends State<HomeMap> {
   DBHelper db;
   ShroomLocationsData shroomLocData;
 
+  ui.Offset moveEndPos;
+
 
   @override
   void initState() {
@@ -137,8 +139,6 @@ class _HomeMapState extends State<HomeMap> {
       imageBytesResized = Uint8List.fromList(encodePng(image));
     }
 
-
-
     //bytes to ui.Image
     Completer<ui.Image> completer = new Completer();
     ui.decodeImageFromList(imageBytesResized, (result) {
@@ -154,7 +154,7 @@ class _HomeMapState extends State<HomeMap> {
     final center = Offset(imageDone.width / 2, (imageDone.height + circleImageMargin).toDouble());
 
     // The circle should be paint before or it will be hidden by the path
-    Paint paintCircle = Paint()..color = Colors.black;
+    Paint paintCircle = Paint()..color = isPastRemindDate(shroom.remindDays) ? Colors.green : Colors.red;
     Paint paintBorder = Paint()
       ..color = Colors.white
       ..strokeWidth = 5
@@ -304,5 +304,10 @@ class _HomeMapState extends State<HomeMap> {
     String daysText = days >= 0 ? "now" : days == -1 ? "in ${days.abs()} day" : "in ${days.abs()} days";
 
     return Text("Can be repicked $daysText" + " ($remindDays)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white54));
+  }
+
+  bool isPastRemindDate(String remindDays) {
+    DateTime remindDate = DateTime.parse(remindDays);
+    return remindDate.isBefore(DateTime.now());
   }
 }
