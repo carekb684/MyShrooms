@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image/image.dart';
@@ -121,17 +122,22 @@ class _HomeMapState extends State<HomeMap> {
   }
 
   Future<Uint8List> drawShroomPin(ShroomLocation shroom, int height) async{
+    Uint8List imageBytesResized;
     if (shroom.photo == null) {
+      //get placeholder
+      ByteData bytes = await rootBundle.load('assets/images/shroom_placeholder.png');
+      imageBytesResized = bytes.buffer.asUint8List();
+    } else {
+      var bytes = File(StringHelper.getPhotoPath(shroom.photo, shroom.id)).readAsBytesSync();
+      var image = decodeImage(bytes);
 
+      image = copyResizeCropSquare(image, height); //might cause rotation...
+      image = bakeOrientation(image); //fixes rotation....
+
+      imageBytesResized = Uint8List.fromList(encodePng(image));
     }
 
-    var bytes = File(StringHelper.getPhotoPath(shroom.photo, shroom.id)).readAsBytesSync();
-    var image = decodeImage(bytes);
 
-    image = copyResizeCropSquare(image, height); //might cause rotation...
-    image = bakeOrientation(image); //fixes rotation....
-
-    Uint8List imageBytesResized = Uint8List.fromList(encodePng(image));
 
     //bytes to ui.Image
     Completer<ui.Image> completer = new Completer();
@@ -268,8 +274,10 @@ class _HomeMapState extends State<HomeMap> {
   }
 
   Widget getImageThumb(ShroomLocation shroom) {
+    if (shroom.photo == null) {
+      return Container();
+    }
     File image;
-
     return InkWell(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => ViewImageFullScreen(image: image))),
       child: ClipRRect(

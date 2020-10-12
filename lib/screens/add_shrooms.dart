@@ -243,11 +243,13 @@ class _AddShroomsState extends State<AddShrooms> {
     var currentLocation = await locationData.future;
     String remindDate = DateTime.now().add(Duration(days: _counterValue)).toIso8601String().split("T").first;
     var shroom = ShroomLocation(name: shroomName, pickCount: 1, long: currentLocation.longitude,
-        lat: currentLocation.latitude, remindDays: remindDate, photo: '$directory/shroomlocation_.'+_image.extension);
+        lat: currentLocation.latitude, remindDays: remindDate, photo: _image != null ? '$directory/shroomlocation_.'+_image.extension : null);
     var id = db.insertShroomLocation(shroom);
 
     id.then((id) async {
-      await storeImageLocally(_image, id, directory);
+      if (_image != null) {
+        await storeImageLocally(_image, id, directory);
+      }
 
       shroom.id = id;
       shroomLocData.add(shroom);
