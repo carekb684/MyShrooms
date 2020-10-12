@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image/image.dart';
 import 'package:location/location.dart';
+import 'package:my_shrooms/animations/add_shrooms_transition.dart';
 import 'package:my_shrooms/custom_widget/maps_marker.dart';
 import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
 import 'package:my_shrooms/models/shroom_location.dart';
@@ -75,7 +76,14 @@ class _HomeMapState extends State<HomeMap> {
                     child: IconButton(
                       icon: Icon(Icons.add, color: Colors.white),
                       iconSize: 25,
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => AddShrooms())),
+                      onPressed: () => Navigator.push(context,
+                          SlideInRightTransition(
+                            duration: Duration(milliseconds: 1500),
+                            pageBuilder: (context, animation, secondaryAnimation){
+                              return AddShrooms(transitionAnimation: animation);
+                              },
+                          ),
+                      ),
                     )
                 ),
               ),

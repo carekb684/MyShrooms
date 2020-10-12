@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
+import 'package:my_shrooms/animations/add_shroom_slide_animation.dart';
 import 'package:my_shrooms/animations/fade_in.dart';
 import 'package:my_shrooms/custom_widget/counter.dart';
 import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
@@ -18,6 +19,10 @@ import 'package:thumbnailer/thumbnailer.dart';
 import 'package:my_shrooms/util/file.dart';
 
 class AddShrooms extends StatefulWidget {
+
+  AddShrooms({this.transitionAnimation});
+  final Animation<double> transitionAnimation;
+
   @override
   _AddShroomsState createState() => _AddShroomsState();
 }
@@ -70,41 +75,49 @@ class _AddShroomsState extends State<AddShrooms> {
           color: Theme.of(context).colorScheme.background,
           child: Column(
             children: [
+              //######
               //HEADER
-              Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30),),
-                    image: DecorationImage(image: AssetImage('assets/images/myShrooomHeader.png'), fit: BoxFit.fill)
-                  ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SafeArea(child: IconButton(icon: Icon(Icons.close), color: Theme.of(context).colorScheme.onPrimary, onPressed: ()=> Navigator.pop(context))),
-
-                    SizedBox(height: 30),
-
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15),
-                      child: Column( crossAxisAlignment: CrossAxisAlignment.start,
+              SlideInAnimation(
+                  animation: widget.transitionAnimation,
+                  begin: Offset(0, -1), end: Offset(0,0),
+                  interval: Interval(0.3, 0.5, curve: Curves.easeOutCubic),
+                  child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30), bottomRight: Radius.circular(30),),
+                          image: DecorationImage(image: AssetImage('assets/images/myShrooomHeader.png'), fit: BoxFit.fill)
+                      ),
+                      child:
+                      //######
+                      //MUSHROOM NAME
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          FadeAnimation(0.5,
-                            Text("Add your",
-                              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onPrimary),),
+                          SafeArea(child: IconButton(icon: Icon(Icons.close), color: Theme.of(context).colorScheme.onPrimary, onPressed: ()=> Navigator.pop(context))),
+
+                          SizedBox(height: 30),
+
+                          Padding(
+                              padding: const EdgeInsets.only(left: 15),
+                              child: Column( crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  FadeAnimation(0.5,
+                                    Text("Add your",
+                                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onPrimary),),
+                                  ),
+                                  FadeAnimation(0.8,
+                                    Text("mushroom spot",
+                                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onPrimary),),
+                                  ),
+                                ],)
                           ),
-                          FadeAnimation(0.8,
-                            Text("mushroom spot",
-                              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onPrimary),),
-                          ),
-                      ],)
-                    ),
 
-                    SizedBox(height: 25),
+                          SizedBox(height: 25),
 
-
-                  ],
-                )
+                        ],
+                      )
+                  ),
               ),
 
               SizedBox(height: 40,),
@@ -117,71 +130,101 @@ class _AddShroomsState extends State<AddShrooms> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 5),
-                        child: Text("Mushroom name", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onBackground)),
-                      ),
-                      SizedBox(height: 5,),
-                      Container(
-                        decoration: WidgetUtil.boxDecorationBlur(context, Colors.white),
-                        child: Container(
-                          padding: EdgeInsets.only(top: 6, bottom: 6, right: 6, left: 12),
-                          child: TextFormField(
-                            validator: (value) => value.isEmpty ? "Please enter a name" : null,
-                            onSaved: (newValue) => shroomName = newValue,
-                            decoration: InputDecoration(
-                                border: InputBorder.none,
-                            ),
+
+                      SlideInAnimation(
+                          animation: widget.transitionAnimation,
+                          begin: Offset(-1.2, 0), end: Offset(0,0),
+                          interval: Interval(0.4, 1.0, curve: Curves.easeOutCubic),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5),
+                                child: Text("Mushroom name", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onBackground)),
+                              ),
+
+                              SizedBox(height: 5,),
+                              Container(
+                                decoration: WidgetUtil.boxDecorationBlur(context, Colors.white),
+                                child: Container(
+                                  padding: EdgeInsets.only(top: 6, bottom: 6, right: 6, left: 12),
+                                  child: TextFormField(
+                                    validator: (value) => value.isEmpty ? "Please enter a name" : null,
+                                    onSaved: (newValue) => shroomName = newValue,
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
                       ),
 
                       SizedBox(height: 40),
+                      //######
+                      //TAKE A PHOTO
 
-                      InkWell(
-                        onTap: getImage,
-                        child: Container(
-                          width: double.infinity,
-                          height: 200,
-                          decoration: WidgetUtil.boxDecorationBlur(context, Colors.white),
-                          child: getPhotoOrPlaceholder(context),
-                        ),
+                      SlideInAnimation(
+                          animation: widget.transitionAnimation,
+                          begin: Offset(1.2, 0), end: Offset(0,0),
+                          interval: Interval(0.4, 1.0, curve: Curves.easeOutCubic),
+                          child: InkWell(
+                            onTap: getImage,
+                            child: Container(
+                              width: double.infinity,
+                              height: 200,
+                              decoration: WidgetUtil.boxDecorationBlur(context, Colors.white),
+                              child: getPhotoOrPlaceholder(context),
+                            ),
+                          ),
                       ),
 
                       SizedBox(height: 30),
 
-                      Align(
-                          alignment: Alignment.center,
-                          child: Text("Remind me to repick in $_counterValue days", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onBackground))),
-                      Align(
-                          alignment: Alignment.center,
-                          child: Counter(
-                            textPadding: 10,
-                            textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                            buttonSize: 40,
-                            iconColor: Theme.of(context).colorScheme.onPrimary,
-                            color: Theme.of(context).colorScheme.primary,
-                            initialValue: _counterValue, minValue: 0, maxValue: 50, step: 1, decimalPlaces: 0,
-                            onChanged: (value) {
-                              setState(() {
-                                _counterValue = value;
-                              });
-                            },
-                        ),
-                      ),
+                      //#####
+                      //REMIND TO REPICK + SAVE
+                      SlideInAnimation(
+                          animation: widget.transitionAnimation,
+                          begin: Offset(0, 1), end: Offset(0,0),
+                          interval: Interval(0.4, 1.0, curve: Curves.easeOutCubic),
+                        child: Column(
+                          children: [
+                            Align(
+                                alignment: Alignment.center,
+                                child: Text("Remind me to repick in $_counterValue days", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onBackground))),
+                            Align(
+                              alignment: Alignment.center,
+                              child: Counter(
+                                textPadding: 10,
+                                textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                                buttonSize: 40,
+                                iconColor: Theme.of(context).colorScheme.onPrimary,
+                                color: Theme.of(context).colorScheme.primary,
+                                initialValue: _counterValue, minValue: 0, maxValue: 50, step: 1, decimalPlaces: 0,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _counterValue = value;
+                                  });
+                                },
+                              ),
+                            ),
 
-                      SizedBox(height: 40),
-                      Align(
-                        alignment: Alignment.center,
-                        child: Container(
-                          width: 200,
-                          decoration: WidgetUtil.boxDecorationBlur(context, Theme.of(context).colorScheme.primary),
-                          child: RawMaterialButton(
-                              child: Text("Save", style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onPrimary)),
-                              onPressed: onPressSave),
+                            SizedBox(height: 40),
+                            Align(
+                              alignment: Alignment.center,
+                              child: Container(
+                                width: 200,
+                                decoration: WidgetUtil.boxDecorationBlur(context, Theme.of(context).colorScheme.primary),
+                                child: RawMaterialButton(
+                                    child: Text("Save", style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onPrimary)),
+                                    onPressed: onPressSave),
+                              ),
+                            ),
+                            SizedBox(height: 40),
+                          ],
                         ),
                       ),
-                      SizedBox(height: 40),
 
                   ],),
                 ),
