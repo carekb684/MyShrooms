@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
@@ -33,6 +34,7 @@ class _AddShroomsState extends State<AddShrooms> {
   Completer<LocationData> locationData = Completer();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _typeAheadController = TextEditingController();
   String shroomName;
 
   File _image;
@@ -149,13 +151,31 @@ class _AddShroomsState extends State<AddShrooms> {
                                 decoration: WidgetUtil.boxDecorationBlur(context, Colors.white),
                                 child: Container(
                                   padding: EdgeInsets.only(top: 6, bottom: 6, right: 6, left: 12),
-                                  child: TextFormField(
-                                    textCapitalization: TextCapitalization.sentences,
+                                  child: TypeAheadFormField(
+                                    textFieldConfiguration: TextFieldConfiguration(
+                                        textCapitalization: TextCapitalization.sentences,
+                                        controller: this._typeAheadController,
+                                        decoration: InputDecoration(
+                                          border: InputBorder.none,
+                                        )
+                                    ),
                                     validator: (value) => value.isEmpty ? "Please enter a name" : null,
                                     onSaved: (newValue) => shroomName = newValue,
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none,
-                                    ),
+                                    hideOnEmpty: true, hideOnLoading: true,
+                                    suggestionsCallback: getNameSuggestions,
+                                    suggestionsBoxVerticalOffset: 6.0,
+                                    suggestionsBoxDecoration: SuggestionsBoxDecoration(elevation: 0, offsetX: -3),
+                                    itemBuilder: (context, suggestion) {
+                                      return ListTile(
+                                        title: Text(suggestion),
+                                      );
+                                    },
+                                    transitionBuilder: (context, suggestionsBox, controller) {
+                                      return suggestionsBox;
+                                    },
+                                    onSuggestionSelected: (suggestion) {
+                                      this._typeAheadController.text = suggestion;
+                                    },
                                   ),
                                 ),
                               ),
@@ -314,4 +334,11 @@ class _AddShroomsState extends State<AddShrooms> {
 
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
 
+
+  FutureOr<Iterable> getNameSuggestions(String pattern) {
+    if (pattern.isEmpty) return [];
+    List<ShroomLocation> list = shroomLocData.shroomsLoc;
+    return list.where((element) => element.name.toLowerCase().startsWith(pattern.toLowerCase()) &&
+        element.name.toLowerCase() != pattern.toLowerCase()).map((e) => e.name);
+  }
 }
