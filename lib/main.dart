@@ -1,5 +1,6 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
 import 'package:my_shrooms/models/shroom_location.dart';
 import 'package:my_shrooms/screens/home_map.dart';
@@ -52,6 +53,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
 
     return LoadDbThenShowPage(context);
   }
