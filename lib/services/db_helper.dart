@@ -28,7 +28,7 @@ class DBHelper {
       },
       // Set the version. This executes the onCreate function and provides a
       // path to perform database upgrades and downgrades.
-      version: 17,
+      version: 18,
     );
   }
 

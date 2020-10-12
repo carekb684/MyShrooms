@@ -57,6 +57,9 @@ class _HomeMapState extends State<HomeMap> {
 
   @override
   Widget build(BuildContext context) {
+
+
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       body: Stack(
@@ -123,10 +126,10 @@ class _HomeMapState extends State<HomeMap> {
 
   void addShroomPins(List<ShroomLocation> shrooms) async {
     for (ShroomLocation shroom in shrooms) {
-
-      drawShroomPin(shroom, 150).then((bytes) {
+      if(alreadyDrawn(shroom)) {
+        var bytes = await drawShroomPin(shroom, 150);
         addMarker(shroom, BitmapDescriptor.fromBytes(bytes));
-      });
+      }
 
     }
   }
@@ -317,5 +320,14 @@ class _HomeMapState extends State<HomeMap> {
   bool isPastRemindDate(String remindDays) {
     DateTime remindDate = DateTime.parse(remindDays);
     return remindDate.isBefore(DateTime.now());
+  }
+
+  bool alreadyDrawn(ShroomLocation shroom) {
+    for (MyMarker marker in _markers) {
+      if (shroom.id.toString() == marker.markerId.value) {
+        return false;
+      }
+    }
+    return true;
   }
 }
