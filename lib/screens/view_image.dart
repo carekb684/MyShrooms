@@ -10,29 +10,32 @@ class ViewImageFullScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-          fit: StackFit.expand,
-          children: [
+      body: Container(
+        color: Colors.black,
+        child: Stack(
+            fit: StackFit.expand,
+            children: [
 
-            Image.file(image, fit:BoxFit.fill,),
+              Image.file(image, fit:BoxFit.fitWidth,),
 
-            Positioned(
-              left: 5, top:5,
-              child: SafeArea(
-                child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.black.withOpacity(0.3),
-                    ),
-                    child: IconButton(
-                      icon: Icon(Icons.close, color: Colors.white),
-                      iconSize: 25,
-                      onPressed: () => Navigator.pop(context),
-                    )
+              Positioned(
+                left: 5, top:5,
+                child: SafeArea(
+                  child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.close, color: Colors.white),
+                        iconSize: 25,
+                        onPressed: () => Navigator.pop(context),
+                      )
+                  ),
                 ),
-              ),
-            )
-          ]
+              )
+            ]
+        ),
       ),
     );
   }

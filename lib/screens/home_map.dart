@@ -33,10 +33,6 @@ class _HomeMapState extends State<HomeMap> {
   DBHelper db;
   ShroomLocationsData shroomLocData;
 
-  Offset movePinPos;
-
-  //Future<List<ShroomLocation>> fShrooms;
-
 
   @override
   void initState() {
@@ -131,7 +127,9 @@ class _HomeMapState extends State<HomeMap> {
 
     var bytes = File(StringHelper.getPhotoPath(shroom.photo, shroom.id)).readAsBytesSync();
     var image = decodeImage(bytes);
-    image = copyResizeCropSquare(image, height);
+
+    image = copyResizeCropSquare(image, height); //might cause rotation...
+    image = bakeOrientation(image); //fixes rotation....
 
     Uint8List imageBytesResized = Uint8List.fromList(encodePng(image));
 
@@ -293,7 +291,7 @@ class _HomeMapState extends State<HomeMap> {
     DateTime remindDate = DateTime.parse(remindDays);
     DateTime now = DateTime.now();
     now = DateTime(now.year, now.month, now.day, 0, 0, 0, 0, 0);
-    
+
     int days = now.difference(remindDate).inDays;
     String daysText = days >= 0 ? "now" : days == -1 ? "in ${days.abs()} day" : "in ${days.abs()} days";
 
