@@ -32,13 +32,13 @@ class DBHelper {
     );
   }
 
-  /*
-  Future<int> deleteFavorite(String id) {
-    var future = db.delete(FAVORITES_TABLE, where: "recipeId = ?", whereArgs: [id]);
+
+  Future<int> deleteShroomLocation(int id) {
+    var future = db.delete(LOCATIONS_TABLE, where: "id = ?", whereArgs: [id]);
     return future;
   }
 
-   */
+
 
   Future<int> insertShroomLocation(ShroomLocation shroom) async {
     var future = await db.insert(LOCATIONS_TABLE, shroom.toMap(), conflictAlgorithm: ConflictAlgorithm.fail);

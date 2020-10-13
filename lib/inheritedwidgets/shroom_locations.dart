@@ -18,6 +18,11 @@ class ShroomLocationsData with ChangeNotifier {
     notifyListeners();
   }
 
+  void delete(int id) {
+    _shrooms.removeWhere((element) => element.id == id);
+    notifyListeners();
+  }
+
   ShroomLocation changeCoords(int id, LatLng coords) {
     var shroom = _shrooms.firstWhere((element) => id == element.id );
     shroom.lat = coords.latitude;

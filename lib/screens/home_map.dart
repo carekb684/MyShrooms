@@ -185,7 +185,7 @@ class _HomeMapState extends State<HomeMap> {
           child: Text("Would you like to save this position?"),
         ),
         actions: <Widget>[
-          FlatButton(child: Text("Cancel"), onPressed: () => dragRestoreOldLoc(shroomId, context)),
+          FlatButton(child: Text("Cancel", style: TextStyle(color: Colors.black38),), onPressed: () => dragRestoreOldLoc(shroomId, context)),
           FlatButton(child: Text("Save"), onPressed: () => saveNewDragLoc(shroomId, value, context)),
         ],
      ).show(context);
@@ -252,8 +252,61 @@ class _HomeMapState extends State<HomeMap> {
                   child: Container(
                     margin: EdgeInsets.symmetric(horizontal: 15),
                     child: Column(children: [
-                      SizedBox(height:20),
-                      Text(shroom.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Container(
+                                  margin: EdgeInsets.only(top: 8,),
+                                  width: 35,
+                                  height: 35,
+                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: Colors.white54,),
+                                  child: IconButton(
+                                    icon: Icon(Icons.delete_forever_outlined, color: Theme.of(context).colorScheme.primary,),
+                                    padding: EdgeInsets.zero,
+                                    iconSize: 25,
+                                    onPressed: () => onTapDelete(shroom.id, shroom.photo),
+                                  )),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(shroom.name, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Theme.of(context).colorScheme.onPrimary),),
+                          ),
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Container(
+                                margin: EdgeInsets.only(top: 8,),
+                                width: 35,
+                                height: 35,
+                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: Colors.white54,),
+                                child: IconButton(
+                                  icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.primary,),
+                                  padding: EdgeInsets.zero,
+                                  iconSize: 25,
+                                )),
+                            ),
+                          ),
+                      ],),
+                      /*
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                            margin: EdgeInsets.only(top: 8,),
+                            width: 35,
+                            height: 35,
+                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: Colors.white54,),
+                            child: IconButton(
+                                icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.primary,),
+                                padding: EdgeInsets.zero,
+                                iconSize: 25,
+                            )),
+                      ),*/
+
+
                       getLastPickDateText(shroom.remindDays),
                       Text("Picked ${shroom.pickCount} time" + (shroom.pickCount != 1 ? "s" : ""), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white54)),
                       SizedBox(height: 20,),
@@ -283,10 +336,10 @@ class _HomeMapState extends State<HomeMap> {
       child: ClipRRect(
           borderRadius: BorderRadius.circular(10),
         child: Thumbnail(
-        dataResolver: () async {
-          image = File(StringHelper.getPhotoPath(shroom.photo, shroom.id));
-          return image.readAsBytes();
-        },
+          dataResolver: () async {
+            image = File(StringHelper.getPhotoPath(shroom.photo, shroom.id));
+            return image.readAsBytes();
+          },
         mimeType: "image/" + shroom.photo.split(".").last,
         widgetSize: double.infinity,
         ),
@@ -336,5 +389,31 @@ class _HomeMapState extends State<HomeMap> {
       showShroomDetails(shroom);
     }
 
+  }
+
+  void onTapDelete(int id, String photo) async {
+    await NAlertDialog(
+        onDismiss: () {},
+        dialogStyle: DialogStyle(titleDivider: false),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 12.0),
+          child: Text("Are you sure you want to delete this spot?"),
+        ),
+        actions: <Widget>[
+          FlatButton(child: Text("Cancel", style: TextStyle(color: Colors.black38),), onPressed: () => Navigator.pop(context)),
+          FlatButton(child: Text("Delete"), onPressed: () => deleteShroom(id, photo)),
+        ],
+    ).show(context);
+  }
+
+  void deleteShroom(int id, String photo) {
+    db.deleteShroomLocation(id);
+    _markers.removeWhere((element) => id.toString() == element.markerId.value);
+    shroomLocData.delete(id);
+
+    if(photo != null) File(StringHelper.getPhotoPath(photo, id)).delete();
+
+    Navigator.pop(context);
+    Navigator.pop(context);
   }
 }
