@@ -32,4 +32,9 @@ class ShroomLocationsData with ChangeNotifier {
     //doesnt seem to be needed
     return shroom;
   }
+
+  void updateShroom(ShroomLocation inShroom) {
+    int index = _shrooms.indexWhere((element) => inShroom.id == element.id );
+    _shrooms[index] = inShroom;
+  }
 }

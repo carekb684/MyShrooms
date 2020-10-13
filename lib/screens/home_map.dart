@@ -13,9 +13,11 @@ import 'package:my_shrooms/custom_widget/maps_marker.dart';
 import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
 import 'package:my_shrooms/models/shroom_location.dart';
 import 'package:my_shrooms/screens/add_shrooms.dart';
+import 'package:my_shrooms/screens/edit_shroom.dart';
 import 'package:my_shrooms/screens/view_image.dart';
 import 'package:my_shrooms/services/db_helper.dart';
-import 'package:my_shrooms/util/stringhelper.dart';
+import 'package:my_shrooms/util/datehelper.dart';
+import 'package:my_shrooms/util/filehelper.dart';
 import 'package:ndialog/ndialog.dart';
 import 'package:provider/provider.dart';
 import 'package:thumbnailer/thumbnailer.dart';
@@ -35,8 +37,7 @@ class _HomeMapState extends State<HomeMap> {
   DBHelper db;
   ShroomLocationsData shroomLocData;
 
-  ui.Offset moveEndPos;
-
+  int redrawId;
 
   @override
   void initState() {
@@ -114,12 +115,12 @@ class _HomeMapState extends State<HomeMap> {
   }
 
   void addShroomPins(List<ShroomLocation> shrooms) async {
+
     for (ShroomLocation shroom in shrooms) {
       if(!alreadyDrawn(shroom)) {
         var bytes = await drawShroomPin(shroom, 150);
         addMarker(shroom, BitmapDescriptor.fromBytes(bytes));
       }
-
     }
   }
 
@@ -130,7 +131,7 @@ class _HomeMapState extends State<HomeMap> {
       ByteData bytes = await rootBundle.load('assets/images/shroom_placeholder.png');
       imageBytesResized = bytes.buffer.asUint8List();
     } else {
-      var bytes = File(StringHelper.getPhotoPath(shroom.photo, shroom.id)).readAsBytesSync();
+      var bytes = File(FileHelper.getPhotoPath(shroom.photo, shroom.id)).readAsBytesSync();
       var image = decodeImage(bytes);
 
       image = copyResizeCropSquare(image, height); //might cause rotation...
@@ -238,6 +239,8 @@ class _HomeMapState extends State<HomeMap> {
         context: context,
         backgroundColor: Colors.transparent,
         builder: (BuildContext context) {
+          return StatefulBuilder(builder: (context, modalSetState) {
+
           return Wrap(
             children: [
               ClipRRect(
@@ -248,7 +251,6 @@ class _HomeMapState extends State<HomeMap> {
               child: Container(
                   width: double.infinity,
                   color: Theme.of(context).colorScheme.primary,
-                  //height: (56 * 6).toDouble(),
                   child: Container(
                     margin: EdgeInsets.symmetric(horizontal: 15),
                     child: Column(children: [
@@ -287,25 +289,11 @@ class _HomeMapState extends State<HomeMap> {
                                   icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.primary,),
                                   padding: EdgeInsets.zero,
                                   iconSize: 25,
+                                  onPressed: () => onPressEdit(shroom, modalSetState),
                                 )),
                             ),
                           ),
                       ],),
-                      /*
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Container(
-                            margin: EdgeInsets.only(top: 8,),
-                            width: 35,
-                            height: 35,
-                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), color: Colors.white54,),
-                            child: IconButton(
-                                icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.primary,),
-                                padding: EdgeInsets.zero,
-                                iconSize: 25,
-                            )),
-                      ),*/
-
 
                       getLastPickDateText(shroom.remindDays),
                       Text("Picked ${shroom.pickCount} time" + (shroom.pickCount != 1 ? "s" : ""), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white54)),
@@ -322,6 +310,7 @@ class _HomeMapState extends State<HomeMap> {
             ),
           ]
           );
+          },);
         }
     );
   }
@@ -337,7 +326,7 @@ class _HomeMapState extends State<HomeMap> {
           borderRadius: BorderRadius.circular(10),
         child: Thumbnail(
           dataResolver: () async {
-            image = File(StringHelper.getPhotoPath(shroom.photo, shroom.id));
+            image = File(FileHelper.getPhotoPath(shroom.photo, shroom.id));
             return image.readAsBytes();
           },
         mimeType: "image/" + shroom.photo.split(".").last,
@@ -348,15 +337,12 @@ class _HomeMapState extends State<HomeMap> {
 
   }
 
-  Widget getLastPickDateText(String remindDays) {
-    DateTime remindDate = DateTime.parse(remindDays);
-    DateTime now = DateTime.now();
-    now = DateTime(now.year, now.month, now.day, 0, 0, 0, 0, 0);
+  Widget getLastPickDateText(String remindDate) {
+    int days = DateHelper.getDaysCountFromStringDate(remindDate);
 
-    int days = now.difference(remindDate).inDays;
-    String daysText = days >= 0 ? "now" : days == -1 ? "in ${days.abs()} day" : "in ${days.abs()} days";
+    String daysText = days == 0 ? "now" : days == 1 ? "in $days day" : "in $days days";
 
-    return Text("Can be repicked $daysText" + " ($remindDays)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white54));
+    return Text("Can be repicked $daysText" + " ($remindDate)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white54));
   }
 
   bool isPastRemindDate(String remindDays) {
@@ -411,9 +397,34 @@ class _HomeMapState extends State<HomeMap> {
     _markers.removeWhere((element) => id.toString() == element.markerId.value);
     shroomLocData.delete(id);
 
-    if(photo != null) File(StringHelper.getPhotoPath(photo, id)).delete();
+    if(photo != null) File(FileHelper.getPhotoPath(photo, id)).delete();
 
     Navigator.pop(context);
     Navigator.pop(context);
+  }
+
+  void onPressEdit(ShroomLocation shroom, modalSetState) async{
+    var mapController = await _controller.future;
+    mapController.hideMarkerInfoWindow(MarkerId(shroom.id.toString()));
+
+    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) =>
+        EditShroom(shroom))).then((value) {
+          modalSetState(() {});
+          if (value != -1){
+            redrawMarker(value);
+          }
+        });
+  }
+
+  void redrawMarker(int id) async{
+    //remove old marker
+    _markers.removeWhere((element) => id.toString() == element?.markerId.value);
+
+    ShroomLocation shroom = shroomLocData.shroomsLoc.firstWhere((element) => id == element.id);
+
+    var bytes = await drawShroomPin(shroom, 150);
+    addMarker(shroom, BitmapDescriptor.fromBytes(bytes));
+
+
   }
 }
