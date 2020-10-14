@@ -80,7 +80,7 @@ class RepickCounterState extends State<RepickCounter> {
   }
 
   Future<bool> closeToolTip() async {
-    if (tooltip.isOpen) {
+    if (tooltip != null && tooltip.isOpen) {
       tooltip.close();
       return false;
     }
