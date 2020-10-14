@@ -1,13 +1,18 @@
+import 'dart:async';
+
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_shrooms/inheritedwidgets/settings_prefs.dart';
 import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
+import 'package:my_shrooms/models/settings.dart';
 import 'package:my_shrooms/models/shroom_location.dart';
 import 'package:my_shrooms/screens/home_map.dart';
 import 'package:my_shrooms/services/db_helper.dart';
 import 'package:my_shrooms/util/color_from_hex.dart';
 import 'package:provider/provider.dart';
 import 'package:random_color_scheme/random_color_scheme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'dart:math' as math;
 
@@ -26,28 +31,51 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
+  SettingsPrefs setPrefs;
   DBHelper dbHelper;
-  List<ShroomLocation> shroomLocations;
+  Completer<List<ShroomLocation>> shroomCompleter = Completer();
+  List<ShroomLocation> shrooms;
 
   @override
   void initState() {
     super.initState();
     getDB();
+    initPrefs();
   }
 
   void getDB() async {
     final Future<Database> future = DBHelper.init();
-
-    future.then((value){
-      dbHelper = DBHelper(db: value);
+    Database db = await future;
+      dbHelper = DBHelper(db: db);
       dbHelper.getShroomLocations().then((value){
         setState(() {
-          shroomLocations = value;
+          shroomCompleter.complete(value);
         });
       });
+  }
 
+  void initPrefs() async {
+    SharedPreferences sPrefs = await SharedPreferences.getInstance();
+    if (!sPrefs.containsKey("onlyRegrows")) {
+      sPrefs.setBool("onlyRegrows", false);
+    }
 
+    shrooms = await shroomCompleter.future;
+    setupSettings(shrooms, sPrefs);
+  }
+
+  void setupSettings(List<ShroomLocation> shrooms, SharedPreferences sPrefs) {
+    var settingsObj = Settings();
+    settingsObj.onlyRegrows = sPrefs.get("onlyRegrows");
+
+    Map<String, bool> settingsMap = {};
+    for (ShroomLocation shroom in shrooms) {
+      settingsMap[shroom.name] = sPrefs.get(shroom.name);
+    }
+    settingsObj.displayShrooms = settingsMap;
+
+    setState(() {
+      setPrefs = SettingsPrefs(prefs: sPrefs)..settings = settingsObj;
     });
   }
 
@@ -62,7 +90,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget LoadDbThenShowPage(BuildContext context) {
-    if (dbHelper == null) {
+    if (setPrefs == null) {
       return Container(
         color: HexColor.fromHex("#325411"),
       );
@@ -70,7 +98,8 @@ class _MyAppState extends State<MyApp> {
       return MultiProvider(
         providers: [
           Provider<DBHelper>( create: (_) => dbHelper),
-          ChangeNotifierProvider<ShroomLocationsData>( create: (_) => ShroomLocationsData(shroomLocations)),
+          ChangeNotifierProvider<ShroomLocationsData>( create: (_) => ShroomLocationsData(shrooms)),
+          ChangeNotifierProvider<SettingsPrefs>( create: (_) => setPrefs),
         ],
 
         child: MaterialApp(
@@ -99,5 +128,7 @@ class _MyAppState extends State<MyApp> {
     print("ColorScheme Seed: " + seed.toString());
     return seed;
   }
+
+
 
 }

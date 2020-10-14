@@ -10,6 +10,7 @@ import 'package:image/image.dart';
 import 'package:location/location.dart';
 import 'package:my_shrooms/animations/add_shrooms_transition.dart';
 import 'package:my_shrooms/custom_widget/maps_marker.dart';
+import 'package:my_shrooms/inheritedwidgets/settings_prefs.dart';
 import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
 import 'package:my_shrooms/models/shroom_location.dart';
 import 'package:my_shrooms/screens/add_shrooms.dart';
@@ -22,6 +23,7 @@ import 'package:my_shrooms/util/datehelper.dart';
 import 'package:my_shrooms/util/filehelper.dart';
 import 'package:ndialog/ndialog.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeMap extends StatefulWidget {
   @override
@@ -40,6 +42,8 @@ class _HomeMapState extends State<HomeMap> {
 
   int redrawId;
 
+  SettingsPrefs setPrefs;
+
   @override
   void initState() {
     super.initState();
@@ -50,14 +54,13 @@ class _HomeMapState extends State<HomeMap> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     db = Provider.of<DBHelper>(context);
+    setPrefs = Provider.of<SettingsPrefs>(context, listen: true);
     shroomLocData = Provider.of<ShroomLocationsData>(context);
     addShroomPins(shroomLocData.shroomsLoc);
   }
 
-
   @override
   Widget build(BuildContext context) {
-
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
@@ -137,8 +140,10 @@ class _HomeMapState extends State<HomeMap> {
 
   void addShroomPins(List<ShroomLocation> shrooms) async {
 
+
+
     for (ShroomLocation shroom in shrooms) {
-      if(!alreadyDrawn(shroom)) {
+      if(filterWithSettings(shroom)) {
         var bytes = await drawShroomPin(shroom, 150);
         addMarker(shroom, BitmapDescriptor.fromBytes(bytes));
       }
@@ -226,7 +231,7 @@ class _HomeMapState extends State<HomeMap> {
     var icon = oldMarker.icon;
 
     // remove old marker and add new(cant change position)
-    _markers.removeWhere((element) => shroomId.toString() == element?.markerId.value);
+    removeFromMarkers(shroomId);
 
     //get shroom with old location
     var shroom = shroomLocData.shroomsLoc.firstWhere((element) => shroomId == element.id);
@@ -290,7 +295,7 @@ class _HomeMapState extends State<HomeMap> {
                                     icon: Icon(Icons.delete_forever_outlined, color: Theme.of(context).colorScheme.primary,),
                                     padding: EdgeInsets.zero,
                                     iconSize: 25,
-                                    onPressed: () => onTapDelete(shroom.id, shroom.photo),
+                                    onPressed: () => onTapDelete(shroom),
                                   )),
                             ),
                           ),
@@ -384,7 +389,7 @@ class _HomeMapState extends State<HomeMap> {
 
   }
 
-  void onTapDelete(int id, String photo) async {
+  void onTapDelete(ShroomLocation shroom) async {
     await NAlertDialog(
         onDismiss: () {},
         dialogStyle: DialogStyle(titleDivider: false),
@@ -394,15 +399,22 @@ class _HomeMapState extends State<HomeMap> {
         ),
         actions: <Widget>[
           FlatButton(child: Text("Cancel", style: TextStyle(color: Colors.black38),), onPressed: () => Navigator.pop(context)),
-          FlatButton(child: Text("Delete"), onPressed: () => deleteShroom(id, photo)),
+          FlatButton(child: Text("Delete"), onPressed: () => deleteShroom(shroom.id, shroom.photo, shroom.name)),
         ],
     ).show(context);
   }
 
-  void deleteShroom(int id, String photo) {
-    db.deleteShroomLocation(id);
+  void removeFromMarkers(int id) {
     _markers.removeWhere((element) => id.toString() == element.markerId.value);
+  }
+
+  void deleteShroom(int id, String photo, String name) {
+    db.deleteShroomLocation(id);
+    removeFromMarkers(id);
     shroomLocData.delete(id);
+
+    //only delete from prefs if it was the last one with name
+    if (shroomLocData.shroomsLoc.where((element) => element.name == name).isEmpty) setPrefs.prefs.remove(name);
 
     if(photo != null) File(FileHelper.getPhotoPath(photo, id)).delete();
 
@@ -425,10 +437,37 @@ class _HomeMapState extends State<HomeMap> {
 
   void redrawMarker(int id) async{
     //remove old marker
-    _markers.removeWhere((element) => id.toString() == element?.markerId.value);
+    removeFromMarkers(id);
 
     ShroomLocation shroom = shroomLocData.shroomsLoc.firstWhere((element) => id == element.id);
     var bytes = await drawShroomPin(shroom, 150);
     addMarker(shroom, BitmapDescriptor.fromBytes(bytes));
   }
+
+  bool filterWithSettings(ShroomLocation shroom) {
+    if(setPrefs.settings.onlyRegrows) {
+      if (DateHelper.getDaysCountFromStringDate(shroom.remindDays) != 0) {
+        if (alreadyDrawn(shroom)) {
+          setState(() {
+            removeFromMarkers(shroom.id);
+          });
+        }
+        return false;
+        }
+      }
+
+    if(setPrefs.settings.displayShrooms[shroom.name]) {
+      return true;
+    } else {
+      if (alreadyDrawn(shroom)) {
+        setState(() {
+          removeFromMarkers(shroom.id);
+        });
+      }
+      return false;
+    }
+  }
+
+
+
 }

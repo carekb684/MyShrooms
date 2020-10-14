@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:location/location.dart';
 import 'package:my_shrooms/animations/add_shroom_slide_animation.dart';
+import 'package:my_shrooms/inheritedwidgets/settings_prefs.dart';
 import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
 import 'package:my_shrooms/models/shroom_location.dart';
 import 'package:my_shrooms/screens/widgets/add_shroom_header.dart';
@@ -19,6 +20,7 @@ import 'package:my_shrooms/util/filehelper.dart';
 import 'package:my_shrooms/util/widget_util.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddShrooms extends StatefulWidget {
 
@@ -42,6 +44,7 @@ class _AddShroomsState extends State<AddShrooms> {
 
   DBHelper db;
   ShroomLocationsData shroomLocData;
+  SettingsPrefs setPrefs;
 
 
 
@@ -63,6 +66,7 @@ class _AddShroomsState extends State<AddShrooms> {
 
     db = Provider.of<DBHelper>(context);
     shroomLocData = Provider.of<ShroomLocationsData>(context);
+    setPrefs = Provider.of<SettingsPrefs>(context, listen: false);
   }
 
 
@@ -175,9 +179,10 @@ class _AddShroomsState extends State<AddShrooms> {
       if (image != null) {
         await FileHelper.storeImageLocally(image, id, directory);
       }
-
       shroom.id = id;
       shroomLocData.add(shroom);
+
+      setPrefs.prefs.setBool(shroom.name, true);
       Navigator.pop(context, shroom);
     });
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:my_shrooms/inheritedwidgets/settings_prefs.dart';
 import 'package:my_shrooms/screens/add_shrooms.dart';
 import 'package:my_shrooms/util/datehelper.dart';
 import 'package:my_shrooms/util/file_extension.dart';
@@ -18,6 +19,7 @@ import 'package:my_shrooms/util/filehelper.dart';
 import 'package:my_shrooms/util/widget_util.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EditShroom extends StatefulWidget {
   EditShroom(ShroomLocation shroom) {
@@ -34,6 +36,7 @@ class _EditShroomState extends State<EditShroom> {
   Completer<String> dirPath = Completer();
   ShroomLocationsData shroomLocData;
   DBHelper db;
+  SettingsPrefs setPrefs;
 
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   GlobalKey<EnterShroomNameState> nameKey = new GlobalKey<EnterShroomNameState>();
@@ -65,6 +68,7 @@ class _EditShroomState extends State<EditShroom> {
     super.didChangeDependencies();
     db = Provider.of<DBHelper>(context);
     shroomLocData = Provider.of<ShroomLocationsData>(context);
+    setPrefs = Provider.of<SettingsPrefs>(context, listen: false);
   }
 
   @override
@@ -149,16 +153,23 @@ class _EditShroomState extends State<EditShroom> {
     var directory = await dirPath.future;
     String remindDate = DateTime.now().add(Duration(days: remindDays)).toIso8601String().split("T").first;
     String oldRemindDate = widget.shroom.remindDays;
+    String oldName = widget.shroom.name;
+    String newName = nameKey.currentState.shroomName;
 
     var shroom = widget.shroom..
     pickCount = pickCount..
-    name = nameKey.currentState.shroomName..
+    name = newName..
     remindDays = remindDate;
 
     db.updateShroomLocation(shroom);
     shroomLocData.updateShroom(shroom);
-    int id = -1;
 
+    if(oldName != newName) {
+      if (shroomLocData.shroomsLoc.where((element) => element.name == oldName).isEmpty) setPrefs.prefs.remove(oldName);
+      setPrefs.prefs.setBool(newName, true);
+    }
+
+    int id = -1;
     //need to redraw?
     if(newImage) {
       String imagePath = '$directory/shroomlocation_.'+image.extension;

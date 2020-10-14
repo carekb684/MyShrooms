@@ -28,8 +28,6 @@ class ShroomLocationsData with ChangeNotifier {
     shroom.lat = coords.latitude;
     shroom.long = coords.longitude;
 
-    //notifyListeners?
-    //doesnt seem to be needed
     return shroom;
   }
 
