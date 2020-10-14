@@ -91,6 +91,6 @@ class EnterShroomNameState extends State<EnterShroomName> {
     if (pattern.isEmpty) return [];
     List<ShroomLocation> list = shroomLocData.shroomsLoc;
     return list.where((element) => element.name.toLowerCase().startsWith(pattern.toLowerCase()) &&
-        element.name.toLowerCase() != pattern.toLowerCase()).map((e) => e.name);
+        element.name.toLowerCase() != pattern.toLowerCase()).map((e) => e.name).toSet().map((e) => e);
   }
 }

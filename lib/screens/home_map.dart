@@ -14,6 +14,7 @@ import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
 import 'package:my_shrooms/models/shroom_location.dart';
 import 'package:my_shrooms/screens/add_shrooms.dart';
 import 'package:my_shrooms/screens/edit_shroom.dart';
+import 'package:my_shrooms/screens/map_drawer.dart';
 import 'package:my_shrooms/screens/view_image.dart';
 import 'package:my_shrooms/screens/widgets/thumbnail_image_picker.dart';
 import 'package:my_shrooms/services/db_helper.dart';
@@ -28,7 +29,7 @@ class HomeMap extends StatefulWidget {
 }
 
 class _HomeMapState extends State<HomeMap> {
-
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   Completer<GoogleMapController> _controller = Completer();
   List<MyMarker> _markers = [];
   LocationData currentLocation;
@@ -60,6 +61,9 @@ class _HomeMapState extends State<HomeMap> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
+      key: _scaffoldKey,
+      endDrawer: MapDrawer(),
+      endDrawerEnableOpenDragGesture: false,
       body: Stack(
           children: [
 
@@ -83,6 +87,23 @@ class _HomeMapState extends State<HomeMap> {
               ),
             ),
 
+            Positioned(
+              right: 5, top:5,
+              child: SafeArea(
+                child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.black.withOpacity(0.3),
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.menu, color: Colors.white),
+                      iconSize: 25,
+                      onPressed: ()=> _scaffoldKey.currentState.openEndDrawer(),
+                    )
+                ),
+              ),
+            ),
+
           ]
       ),
     );
@@ -94,7 +115,7 @@ class _HomeMapState extends State<HomeMap> {
       mapType: MapType.hybrid,
       markers: Set<MyMarker>.from(_markers),
       myLocationEnabled: true,
-      myLocationButtonEnabled: true,
+      myLocationButtonEnabled: false,
       compassEnabled: false,
       initialCameraPosition: getInitLocation(),
       onMapCreated: (GoogleMapController controller) {
