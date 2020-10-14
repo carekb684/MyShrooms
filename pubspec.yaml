@@ -40,6 +40,7 @@ dependencies:
   photo_view: ^0.10.2
   flutter_typeahead: ^1.8.8
   shared_preferences: ^0.5.12
+  intro_slider: ^2.3.3
 
   cupertino_icons: ^1.0.0
 
@@ -67,6 +68,8 @@ flutter:
   assets:
     - assets/images/myShrooomHeader.png
     - assets/images/shroom_placeholder.png
+    - assets/images/my_shroom_splash_image.png
+    - assets/images/maps_cartoon.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
@@ -80,10 +83,10 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: Pacifico
+      fonts:
+        - asset: assets/fonts/Pacifico-Regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

@@ -8,6 +8,7 @@ import 'package:my_shrooms/inheritedwidgets/shroom_locations.dart';
 import 'package:my_shrooms/models/settings.dart';
 import 'package:my_shrooms/models/shroom_location.dart';
 import 'package:my_shrooms/screens/home_map.dart';
+import 'package:my_shrooms/screens/intro_screen.dart';
 import 'package:my_shrooms/services/db_helper.dart';
 import 'package:my_shrooms/util/color_from_hex.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +20,7 @@ import 'dart:math' as math;
 void main() {
   runApp(
     DevicePreview(
-    enabled: true,
+    enabled: false,
     builder: (context) => MyApp(),
   ),
   );
@@ -58,6 +59,10 @@ class _MyAppState extends State<MyApp> {
     SharedPreferences sPrefs = await SharedPreferences.getInstance();
     if (!sPrefs.containsKey("onlyRegrows")) {
       sPrefs.setBool("onlyRegrows", false);
+    }
+
+    if (!sPrefs.containsKey("introScreen")) {
+      sPrefs.setBool("introScreen", false);
     }
 
     shrooms = await shroomCompleter.future;
@@ -111,7 +116,8 @@ class _MyAppState extends State<MyApp> {
               colorScheme: randomColorSchemeLight(seed: getSeed(2925)), //seed: 2925 == nice green
               visualDensity: VisualDensity.adaptivePlatformDensity,
             ),
-            home: HomeMap(),
+            //home: HomeMap(),
+            home: getStartScreen(),
             routes: {
               //"/profile": (context) => MyProfile(),
               "/screens.home": (context) => HomeMap(),
@@ -127,6 +133,11 @@ class _MyAppState extends State<MyApp> {
     }
     print("ColorScheme Seed: " + seed.toString());
     return seed;
+  }
+
+  Widget getStartScreen() {
+    bool hasIntroBeenDone = setPrefs.prefs.get("introScreen");
+    return hasIntroBeenDone ? HomeMap() : IntroScreen();
   }
 
 
