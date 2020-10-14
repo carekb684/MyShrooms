@@ -19,7 +19,7 @@ import 'dart:math' as math;
 void main() {
   runApp(
     DevicePreview(
-    enabled: false,
+    enabled: true,
     builder: (context) => MyApp(),
   ),
   );

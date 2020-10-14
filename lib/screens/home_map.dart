@@ -321,6 +321,7 @@ class _HomeMapState extends State<HomeMap> {
                           ),
                       ],),
 
+                      SizedBox(height: 5),
                       getLastPickDateText(shroom.remindDays),
                       Text("Picked ${shroom.pickCount} time" + (shroom.pickCount != 1 ? "s" : ""), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white54)),
                       SizedBox(height: 20,),
