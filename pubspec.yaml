@@ -30,7 +30,7 @@ dependencies:
   location: ^3.0.0
   image_picker: ^0.6.7+11
   simple_animations: ^2.2.2
-  thumbnailer: ^1.0.2
+  #thumbnailer: ^1.0.2
   random_color_scheme: ^0.0.1
   device_preview: ^0.5.0-prerelease.3
   flutter_keyboard_visibility: ^3.2.2

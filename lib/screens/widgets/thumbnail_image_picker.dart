@@ -1,29 +1,32 @@
 import 'dart:io';
-
-import 'package:my_shrooms/util/file.dart';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:my_shrooms/util/filehelper.dart';
+import 'package:my_shrooms/screens/view_image.dart';
 import 'package:my_shrooms/util/widget_util.dart';
-import 'package:thumbnailer/thumbnailer.dart';
 
-class ThumbnailImagePicker extends StatefulWidget {
+class Thumbnail extends StatefulWidget {
 
-  ThumbnailImagePicker(Key key, {this.initImage}) : super(key: key);
+  Thumbnail({this.key, this.initImage, this.clickImagePicker = true}) : super(key: key);
   File initImage;
+  bool clickView;
+  bool clickImagePicker;
+  Key key;
+
 
   @override
-  ThumbnailImagePickerState createState() => ThumbnailImagePickerState(initImage);
+  ThumbnailState createState() => ThumbnailState(initImage);
 }
 
-class ThumbnailImagePickerState extends State<ThumbnailImagePicker> {
+class ThumbnailState extends State<Thumbnail> {
 
-  ThumbnailImagePickerState(File initImage) {
+  ThumbnailState(File initImage) {
     image = initImage;
   }
 
   File image;
+
   final picker = ImagePicker();
   bool newImage = false;
 
@@ -31,7 +34,7 @@ class ThumbnailImagePickerState extends State<ThumbnailImagePicker> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: getImage,
+      onTap: widget.clickImagePicker ? getImage : viewImage,
       child: Container(
         width: double.infinity,
         height: 200,
@@ -40,6 +43,10 @@ class ThumbnailImagePickerState extends State<ThumbnailImagePicker> {
       ),
     );
 
+  }
+
+  void viewImage() {
+    Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => ViewImageFullScreen(image: image)));
   }
 
   Future getImage() async {
@@ -65,15 +72,23 @@ class ThumbnailImagePickerState extends State<ThumbnailImagePicker> {
         ],
       );
     }
+
     return ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: Thumbnail(
-          dataResolver: () async {
-            return image.readAsBytes();
-          },
-          mimeType: "image/" + image.extension,
-          widgetSize: double.infinity,
-        )
+        child: getThumbnail(),
+    );
+  }
+
+
+
+  Widget getThumbnail() {
+    return Center(
+      child: Image.file(
+        image,
+        fit: BoxFit.fitWidth,
+        width: double.infinity,
+        filterQuality: FilterQuality.none,
+      ),
     );
   }
 

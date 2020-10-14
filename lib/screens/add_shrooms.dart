@@ -14,7 +14,7 @@ import 'package:my_shrooms/screens/widgets/remind_repick_counter.dart';
 import 'package:my_shrooms/screens/widgets/thumbnail_image_picker.dart';
 import 'package:my_shrooms/services/db_helper.dart';
 import 'package:my_shrooms/util/datehelper.dart';
-import 'package:my_shrooms/util/file.dart';
+import 'package:my_shrooms/util/file_extension.dart';
 import 'package:my_shrooms/util/filehelper.dart';
 import 'package:my_shrooms/util/widget_util.dart';
 import 'package:path_provider/path_provider.dart';
@@ -35,7 +35,7 @@ class _AddShroomsState extends State<AddShrooms> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   GlobalKey<EnterShroomNameState> nameKey = new GlobalKey<EnterShroomNameState>();
-  GlobalKey<ThumbnailImagePickerState> thumbnailKey = new GlobalKey<ThumbnailImagePickerState>();
+  GlobalKey<ThumbnailState> thumbnailKey = new GlobalKey<ThumbnailState>();
   GlobalKey<RepickCounterState> repickKey = new GlobalKey<RepickCounterState>();
 
   Completer<String> dirPath = Completer();
@@ -112,7 +112,7 @@ class _AddShroomsState extends State<AddShrooms> {
                           animation: widget.transitionAnimation,
                           begin: Offset(1.2, 0), end: Offset(0,0),
                           interval: Interval(0.4, 1.0, curve: Curves.easeOutCubic),
-                          child: ThumbnailImagePicker(thumbnailKey),
+                          child: Thumbnail(key: thumbnailKey),
                       ),
 
                       SizedBox(height: 30),

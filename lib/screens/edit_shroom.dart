@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:my_shrooms/screens/add_shrooms.dart';
 import 'package:my_shrooms/util/datehelper.dart';
-import 'package:my_shrooms/util/file.dart';
+import 'package:my_shrooms/util/file_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:my_shrooms/custom_widget/counter.dart';
@@ -37,7 +37,7 @@ class _EditShroomState extends State<EditShroom> {
 
   GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   GlobalKey<EnterShroomNameState> nameKey = new GlobalKey<EnterShroomNameState>();
-  GlobalKey<ThumbnailImagePickerState> thumbnailKey = new GlobalKey<ThumbnailImagePickerState>();
+  GlobalKey<ThumbnailState> thumbnailKey = new GlobalKey<ThumbnailState>();
   File thumbInitImage;
   GlobalKey<RepickCounterState> repickKey = new GlobalKey<RepickCounterState>();
 
@@ -87,7 +87,7 @@ class _EditShroomState extends State<EditShroom> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   EnterShroomName(nameKey, initText: widget.shroom.name,),
                   SizedBox(height: 40),
-                  ThumbnailImagePicker(thumbnailKey, initImage: thumbInitImage,),
+                  Thumbnail(key: thumbnailKey, initImage: thumbInitImage,),
                   SizedBox(height: 30),
                   RepickCounter(repickKey, initCount: DateHelper.getDaysCountFromStringDate(widget.shroom.remindDays)),
                   SizedBox(height: 20),

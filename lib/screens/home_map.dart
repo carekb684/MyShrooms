@@ -15,12 +15,12 @@ import 'package:my_shrooms/models/shroom_location.dart';
 import 'package:my_shrooms/screens/add_shrooms.dart';
 import 'package:my_shrooms/screens/edit_shroom.dart';
 import 'package:my_shrooms/screens/view_image.dart';
+import 'package:my_shrooms/screens/widgets/thumbnail_image_picker.dart';
 import 'package:my_shrooms/services/db_helper.dart';
 import 'package:my_shrooms/util/datehelper.dart';
 import 'package:my_shrooms/util/filehelper.dart';
 import 'package:ndialog/ndialog.dart';
 import 'package:provider/provider.dart';
-import 'package:thumbnailer/thumbnailer.dart';
 
 class HomeMap extends StatefulWidget {
   @override
@@ -319,22 +319,7 @@ class _HomeMapState extends State<HomeMap> {
     if (shroom.photo == null) {
       return Container();
     }
-    File image;
-    return InkWell(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => ViewImageFullScreen(image: image))),
-      child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-        child: Thumbnail(
-          dataResolver: () async {
-            image = File(FileHelper.getPhotoPath(shroom.photo, shroom.id));
-            return image.readAsBytes();
-          },
-        mimeType: "image/" + shroom.photo.split(".").last,
-        widgetSize: double.infinity,
-        ),
-      ),
-    );
-
+    return Thumbnail(initImage: File(FileHelper.getPhotoPath(shroom.photo, shroom.id)), clickImagePicker: false,);
   }
 
   Widget getLastPickDateText(String remindDate) {
@@ -344,6 +329,7 @@ class _HomeMapState extends State<HomeMap> {
 
     return Text("Can be repicked $daysText" + " ($remindDate)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.white54));
   }
+
 
   bool isPastRemindDate(String remindDays) {
     DateTime remindDate = DateTime.parse(remindDays);
@@ -421,10 +407,7 @@ class _HomeMapState extends State<HomeMap> {
     _markers.removeWhere((element) => id.toString() == element?.markerId.value);
 
     ShroomLocation shroom = shroomLocData.shroomsLoc.firstWhere((element) => id == element.id);
-
     var bytes = await drawShroomPin(shroom, 150);
     addMarker(shroom, BitmapDescriptor.fromBytes(bytes));
-
-
   }
 }
