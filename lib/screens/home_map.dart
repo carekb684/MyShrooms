@@ -32,17 +32,24 @@ class HomeMap extends StatefulWidget {
 
 class _HomeMapState extends State<HomeMap> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   Completer<GoogleMapController> _controller = Completer();
   List<MyMarker> _markers = [];
   LocationData currentLocation;
   Location location = Location();
 
+  PermissionStatus permissionGranted;
+  bool denied = false;
+
   DBHelper db;
   ShroomLocationsData shroomLocData;
+  SettingsPrefs setPrefs;
 
   int redrawId;
 
-  SettingsPrefs setPrefs;
+
+
+
 
   @override
   void initState() {
@@ -72,6 +79,7 @@ class _HomeMapState extends State<HomeMap> {
 
             SafeArea(child: getMap()),
 
+            requestPermissionButton(),
 
             Positioned(
               left: 5, top:5,
@@ -128,6 +136,18 @@ class _HomeMapState extends State<HomeMap> {
   }
 
   void setInitialLocation() async {
+
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        setState(() {
+          denied = true;
+        });
+        return;
+      }
+    }
+
     var locationData = await location.getLocation();
     setState(() {
       currentLocation = locationData;
@@ -467,6 +487,42 @@ class _HomeMapState extends State<HomeMap> {
       }
       return false;
     }
+  }
+
+  Widget requestPermissionButton() {
+    if(denied) {
+          return Padding(
+            padding: EdgeInsets.only(top: 100),
+            child: Align(
+              alignment: Alignment.center,
+              child: Column(
+                children: [
+                  RaisedButton(
+                    onPressed: () async{
+                      permissionGranted = await location.requestPermission();
+                      if (permissionGranted != PermissionStatus.granted) {
+                        denied = true;
+                      } else {
+                        setState(() {
+                          denied = false;
+                          setInitialLocation();
+                        });
+                      }
+                    },
+                    color: Theme.of(context).colorScheme.background,
+                    child: Text("Request permission again", style: TextStyle(color: Theme.of(context).colorScheme.onBackground, fontWeight: FontWeight.bold)),
+                  ),
+                  SizedBox(height: 10),
+                  Text("If the button doesn't work, you", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.bold)),
+                  Text("have to go into your phone settings and", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.bold)),
+                  Text("enable the permission for this app.", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+          );
+
+    }
+    return Container();
   }
 
 
