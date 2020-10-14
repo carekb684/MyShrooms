@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:highlighter_coachmark/highlighter_coachmark.dart';
 import 'package:image/image.dart';
 import 'package:location/location.dart';
 import 'package:my_shrooms/animations/add_shrooms_transition.dart';
@@ -32,6 +33,7 @@ class HomeMap extends StatefulWidget {
 
 class _HomeMapState extends State<HomeMap> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey _introAddKey = GlobalObjectKey("introAdd");
 
   Completer<GoogleMapController> _controller = Completer();
   List<MyMarker> _markers = [];
@@ -55,6 +57,10 @@ class _HomeMapState extends State<HomeMap> {
   void initState() {
     super.initState();
     setInitialLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      highlightIntro();
+    });
+
   }
 
   @override
@@ -82,6 +88,7 @@ class _HomeMapState extends State<HomeMap> {
             requestPermissionButton(),
 
             Positioned(
+              key: _introAddKey,
               left: 5, top:5,
               child: SafeArea(
                 child: Container(
@@ -523,6 +530,37 @@ class _HomeMapState extends State<HomeMap> {
 
     }
     return Container();
+  }
+
+  void highlightIntro() {
+    var intro = setPrefs.prefs.get("introHighlight");
+    if (intro != null && intro) return;
+
+    _controller.future.then((value) {
+      CoachMark coachMark = CoachMark();
+      RenderBox target = _introAddKey.currentContext.findRenderObject();
+      Rect markRect = target.localToGlobal(Offset.zero) & target.size;
+      markRect = Rect.fromCircle(center: markRect.center, radius: markRect.longestSide * 0.6);
+      coachMark.show(
+          targetContext: _introAddKey.currentContext,
+          markRect: markRect,
+          children: [
+            Positioned(
+                top: markRect.bottom + 15,
+                left: 10,
+                child: Text("Tap to add a new mushroom spot",
+                    style: const TextStyle(
+                      fontSize: 20.0,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.white,
+                    )))
+          ],
+          duration: null,
+          onClose: () {
+            setPrefs.prefs.setBool("introHighlight", true);
+          });
+
+    });
   }
 
 
