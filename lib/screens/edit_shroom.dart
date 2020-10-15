@@ -165,8 +165,8 @@ class _EditShroomState extends State<EditShroom> {
     shroomLocData.updateShroom(shroom);
 
     if(oldName != newName) {
-      if (shroomLocData.shroomsLoc.where((element) => element.name == oldName).isEmpty) setPrefs.prefs.remove(oldName);
-      setPrefs.prefs.setBool(newName, true);
+      if (shroomLocData.shroomsLoc.where((element) => element.name == oldName).isEmpty) setPrefs.remove(oldName);
+      setPrefs.setBool(newName, true);
     }
 
     int id = -1;

@@ -76,8 +76,7 @@ class _MapDrawerState extends State<MapDrawer> {
                             value: setPrefs.settings.onlyRegrows,
                             onChanged: (value) {
                               setState(() {
-                                setPrefs.settings.onlyRegrows = value;
-                                setPrefs.prefs.setBool("onlyRegrows", value);
+                                setPrefs.setBool("onlyRegrows", value);
                               });
                             },
                           ),
@@ -112,8 +111,7 @@ class _MapDrawerState extends State<MapDrawer> {
           dense: true,
           onChanged: (value) {
             setState(() {
-              setPrefs.settings.displayShrooms[e.key] = value;
-              setPrefs.prefs.setBool(e.key, value);
+              setPrefs.setBool(e.key, value);
             });
             },
         )).toList(),

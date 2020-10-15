@@ -442,7 +442,7 @@ class _HomeMapState extends State<HomeMap> {
     shroomLocData.delete(id);
 
     //only delete from prefs if it was the last one with name
-    if (shroomLocData.shroomsLoc.where((element) => element.name == name).isEmpty) setPrefs.prefs.remove(name);
+    if (shroomLocData.shroomsLoc.where((element) => element.name == name).isEmpty) setPrefs.remove(name);
 
     if(photo != null) File(FileHelper.getPhotoPath(photo, id)).delete();
 

@@ -9,6 +9,16 @@ class SettingsPrefs with ChangeNotifier {
 
   Settings settings;
 
+  void setBool(String name, bool value) {
+    prefs.setBool(name, value);
+    settings.displayShrooms[name] = value;
+  }
+
+  void remove(String name) {
+    prefs.remove(name);
+    settings.displayShrooms.remove(name);
+  }
+
   void notify() {
     notifyListeners();
   }

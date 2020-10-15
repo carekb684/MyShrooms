@@ -180,7 +180,7 @@ class _AddShroomsState extends State<AddShrooms> {
         await FileHelper.storeImageLocally(image, id, directory);
       }
       shroom.id = id;
-      setPrefs.prefs.setBool(shroom.name, true);
+      setPrefs.setBool(shroom.name, true);
       shroomLocData.add(shroom);
 
       Navigator.pop(context, shroom);
