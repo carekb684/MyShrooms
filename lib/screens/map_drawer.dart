@@ -76,7 +76,8 @@ class _MapDrawerState extends State<MapDrawer> {
                             value: setPrefs.settings.onlyRegrows,
                             onChanged: (value) {
                               setState(() {
-                                setPrefs.setBool("onlyRegrows", value);
+                                setPrefs.settings.onlyRegrows = value;
+                                setPrefs.prefs.setBool("onlyRegrows", value);
                               });
                             },
                           ),
